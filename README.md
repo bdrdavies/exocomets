@@ -1,2 +1,3 @@
 # Exocomets
-Work in progress (storage of half baked code)
+
+This repository contains code used to analyse Hubble Space Telecope data aquired using the COS instrument.
