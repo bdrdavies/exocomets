@@ -1,0 +1,47 @@
+{
+"directories" : { 
+    "workdir": "data/"
+    }, 
+
+"datadirs" : { 
+    "2017_3": "data/2017-08-04/",
+    "2017_4": "data/2017-10-21/"
+    },
+
+"filesnames" : { 
+    "filename_start"  : "l",
+    "filename_end"  : "sum.fits"
+    },
+
+"BetaPictoris" : { 
+    "RV": 20.5,
+    "part": "A"
+    },
+
+"regions" : {
+    "align"         : {
+        "A1"        : 1417.5,
+        "A2"        : 1426.5,
+        "B1"        : 1188.0,
+        "B2"        : 1204.0
+    }, 
+    "norm"         : {
+        "A1"        : 1406.0,
+        "A2"        : 1417.0,
+        "B1"        : 1221.0,
+        "B2"        : 1237.0
+    }
+    },
+
+"lines" : {
+    "chosen_line" : "SiIV",
+    "line"          : {
+        "SiIV"        : {
+            "Wavelength"    : 1393.7550,
+            "Strength"      : 0.514,
+            "Gamma"         : 0.882e09,
+            "Mass"          : 28.085
+        }
+    }
+}
+} 
