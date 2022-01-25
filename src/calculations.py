@@ -25,7 +25,7 @@ class Calc:
         #                  and fn.endswith(param["filesnames"]["filename_end"])])
 
         fits_files	= sorted([fn for fn in dir_contents if fn.endswith('sum1.fits')\
-        			  or fn.endswith('sum2.fits') or fn.endswith('sum3.fits') or fn.endswith('sum4.fits')])
+                	  or fn.endswith('sum2.fits') or fn.endswith('sum3.fits') or fn.endswith('sum4.fits')])
 
         # Remove the last sum file as it is faulty in some way
         fits_files  = fits_files[:-1]                          
@@ -92,7 +92,7 @@ class Calc:
         f           = tbdata['FLUX'] 
         a           = net*exptime.T
         
-        t_obs 	    = datetime.strptime(tbheader['DATE-OBS']+" "+tbheader['TIME-OBS'], '%Y-%m-%d %H:%M:%S')
+        t_obs         = datetime.strptime(tbheader['DATE-OBS']+" "+tbheader['TIME-OBS'], '%Y-%m-%d %H:%M:%S')
         
         # Make sure no array element is 0
         a = self.ReplaceWithSmallNumber(a)
@@ -366,3 +366,138 @@ class Calc:
             D_E = np.concatenate((zeros,DATA[2]))
         
         return D_W, D_F, D_E
+
+
+class Model:
+
+    def voigt_wofz(self, a, u):
+
+        ''' Compute the Voigt function using Scipy's wofz().
+
+        # Code from https://github.com/nhmc/Barak/blob/\
+        087602fb372812c0603441ca1ce6820e96963b88/barak/absorb/voigt.py
+        
+        Explanation: https://nhmc.github.io/Barak/generated/barak.voigt.voigt.html#barak.voigt.voigt
+
+        Parameters
+        ----------
+        a: float
+          Ratio of Lorentzian to Gaussian linewidths.
+        u: array of floats
+          The frequency or velocity offsets from the line centre, in units
+          of the Gaussian broadening linewidth.
+
+        See the notes for `voigt` for more details.
+        '''
+        '''
+        This code has been removed for speed purposes
+        try:
+             from scipy.special import wofz
+        except ImportError:
+             s = ("Can't find scipy.special.wofz(), can only calculate Voigt "
+                  " function for 0 < a < 0.1 (a=%g)" % a)  
+             print(s)
+        else:
+             return wofz(u + 1j * a).real
+        '''
+        return wofz(u + 1j * a).real
+
+    def absorption(self, l, v_comp, N, vturb, T, species, param):
+        '''
+        v_comp --> The component speed in km/s
+        N --> The column density exponent (10**N)
+        vturb --> Micro turbulence
+        T --> Gas temperature
+        species --> Given in params.json
+        '''
+
+        w       = param["lines"]["line"][species]["Wavelength"]
+        mass    = param["lines"]["line"][species]["Mass"]
+        fosc    = param["lines"]["line"][species]["Strength"]
+        delta   = param["lines"]["line"][species]["Gamma"] /(4.*np.pi)
+        N_col   = np.array([1.])*10**N
+
+        c_light     = 2.99793e14        # Speed of light
+        k           = 1.38064852e-23    # Boltzmann constant in J/K = m^2*kg/(s^2*K) in SI base units
+        u           = 1.660539040e-27   # Atomic mass unit (Dalton) in kg
+        feature  = np.ones(len(l))
+
+        b_wid   = np.sqrt((T/mass) + ((vturb/0.12895223)**2))
+        b       = 4.30136955e-3*b_wid
+        dnud    = b*c_light/w
+        xc      = l/(1.+v_comp*1.e9/c_light) 
+        v       = 1.e4*abs(((c_light/xc)-(c_light/w))/dnud)
+        tv      = 1.16117705e-14*N_col*w*fosc/b_wid
+        a       = delta/dnud
+        hav     = tv*self.voigt_wofz(a,v)
+
+        # To avoid calculating super tiny numbers
+        for j in range(len(hav)):
+
+            if hav[j] < 50:      
+                feature[j]  =   feature[j]*np.exp(-hav[j])       
+            else:
+                feature[j]  =   0.
+
+        return feature
+
+    def LSF(self, W, lsf_cen, home_dir):
+        ''' Tabulated Theoretical Line Spread Functions at Lifetime position 3
+        See https://www.stsci.edu/hst/instrumentation/cos/performance/spectral-resolution
+        '''
+        # Load the wavelengths which have computed LSF values
+        X               =  np.genfromtxt(home_dir+'/src/aa_LSFTable_G130M_1291_LP3_cn.dat', unpack=True).T[0]
+        
+        # Find the LSF closest to lsf_cen in Angstrom.
+        closest_LSF     = min(X, key=lambda x:abs(x-lsf_cen))
+
+        df              = pd.read_csv(home_dir+'/src/aa_LSFTable_G130M_1291_LP3_cn.dat', delim_whitespace=True)
+        y_LSF_tabu      = df[0:][str(int(closest_LSF))]
+        
+        # We re-center the LSF on 0
+        x_LSF_tabu    = np.arange(-len(y_LSF_tabu)/2,len(y_LSF_tabu)/2)
+
+        # We calculate how many Ångstrom a COS wavelength step is
+        dw_cos          = (W[-1]-W[0])/len(W)
+
+        # We wish to calculate the linespread function over our wavelength range,
+        # which we shift so that the line is centered
+        x_LSF_kernel_cos  = W-lsf_cen
+
+        # We convert the tabulated values to the COS wavelenght scale
+        x_LSF_tabu_cos  = x_LSF_tabu*dw_cos
+        y_LSF_tabu_cos  = y_LSF_tabu*dw_cos
+
+        # Note that the input spectrum must be broader than the LSF kernel (321 pixels)
+        # So in other words len(x_LSF_kernel_cos) > len(x_LSF_tabu_cos) must be true
+        # If it is not the case, you must select a broader wavelength range.
+        LSF_kernel      = np.interp(x_LSF_kernel_cos, x_LSF_tabu_cos, y_LSF_tabu)
+
+        #We normalise the LSF kernel
+        LSF_kernel      = LSF_kernel/np.sum(LSF_kernel)
+
+        return LSF_kernel
+
+class Stats:
+    '''
+    A collection of statistical functions.
+    '''
+        
+    def chi2(self, X):
+        '''
+        Calculated the Chi2 value
+        X[0] => Obs
+        X[1] => Err
+        X[2] => Model
+        '''
+        return np.sum(((X[0] - X[2]) / X[1])**2.)
+
+    def chi2_lm(self, params, F, E, Const, ModelType, param):
+        model = m.Model(params, Const, ModelType, param)[0]
+        return (model - F)**2 / E**2
+    
+    def Merit(self, X):
+        ''' Given a Chi2 value
+        we calculate a likelihood as our merit function
+        '''
+        return np.exp(-self.chi2(X)/2.)
