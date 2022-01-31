@@ -20,13 +20,14 @@
     },
 
 "filesnames" : { 
+    "split_files" : "no",
     "filename_start"  : "l",
     "filename_end"  : "sum.fits"
     },
 
 "BetaPictoris" : { 
     "RV": 20.5,
-    "part": "B"
+    "part": "A"
     },
 
 "regions" : {

@@ -19,16 +19,15 @@ class Calc:
         # Read through the contents of datadirs.
         dir_contents    = os.listdir(datadirs)
         
-        # Find the relevant fits files which start and end with the correct
-        # characters as defined in params.json.
-        #fits_files            = sorted([fn for fn in dir_contents if fn.startswith(param["filesnames"]["filename_start"])\
-        #                  and fn.endswith(param["filesnames"]["filename_end"])])
-
-        fits_files	= sorted([fn for fn in dir_contents if fn.endswith('sum1.fits')\
+        if param["filesnames"]["split_files"] == "no":
+            fits_files = sorted([fn for fn in dir_contents if fn.startswith(param["filesnames"]["filename_start"])\
+                         and fn.endswith(param["filesnames"]["filename_end"])])
+        else:
+            fits_files	= sorted([fn for fn in dir_contents if fn.endswith('sum1.fits')\
                 	  or fn.endswith('sum2.fits') or fn.endswith('sum3.fits') or fn.endswith('sum4.fits')])
 
         # Remove the last sum file as it is faulty in some way
-        fits_files  = fits_files[:-1]                          
+        #fits_files  = fits_files[:-1]                          
                                   
         # Read the HEADER of the fits file.
         for i in range(len(fits_files)):
