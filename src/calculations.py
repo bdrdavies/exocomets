@@ -37,9 +37,14 @@ class Calc:
                 tbheader1 = hdul[1].header.copy()
             hdul.close()
             gc.collect()
-
-            print("\tAVM shift:",str(tbheader0['POSTARG1'])+"\"","\tEXP:",str(round(float(tbheader1['EXPTIME'])))+"s,",\
-            "\tDate:",tbheader1['DATE-OBS']+",","Time:",tbheader1['TIME-OBS'],"UTC")
+            
+            try:
+                print("\tAVM shift:",str(tbheader0['POSTARG1'])+"\"","\tEXP:",str(round(float(tbheader1['EXPTIME'])))+"s,",\
+                "\tDate:",tbheader1['DATE-OBS']+",","Time:",tbheader1['TIME-OBS'],"UTC")
+            except KeyError:
+                # Remove the last sum file as it is faulty in some way
+                fits_files  = fits_files[:-1] 
+                pass
 
         # Initialise a 2D array.
         # The range(4) comes from the data format used: 0 = wavelength, 1 = flux, 2 = flux_err, 3 = obs_time
@@ -134,7 +139,6 @@ class Calc:
                 start = i
             if wave[i] > lambda2 and wave[i] < lambda2+(wave[i]-wave[i-1]):
                 stop = i
-
         return start, stop
 
 
