@@ -19,9 +19,9 @@ class Calc:
         # Read through the contents of datadirs.
         dir_contents    = os.listdir(datadirs)
         
-        if param["filesnames"]["split_files"] == "no":
-            fits_files = sorted([fn for fn in dir_contents if fn.startswith(param["filesnames"]["filename_start"])\
-                         and fn.endswith(param["filesnames"]["filename_end"])])
+        if param["filenames"]["split_files"] == "no":
+            fits_files = sorted([fn for fn in dir_contents if fn.startswith(param["filenames"]["filename_start"])\
+                         and fn.endswith(param["filenames"]["filename_end"])])
         else:
             fits_files	= sorted([fn for fn in dir_contents if fn.endswith('sum1.fits')\
                 	  or fn.endswith('sum2.fits') or fn.endswith('sum3.fits') or fn.endswith('sum4.fits')])

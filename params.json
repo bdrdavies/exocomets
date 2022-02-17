@@ -19,7 +19,7 @@
     "2018_4": "data/2018-12-15/"
     },
 
-"filesnames" : { 
+"filenames" : { 
     "split_files" : "no",
     "filename_start"  : "l",
     "filename_end"  : "sum.fits"
