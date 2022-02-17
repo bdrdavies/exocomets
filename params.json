@@ -20,7 +20,7 @@
     },
 
 "filenames" : { 
-    "split_files" : "no",
+    "split_files" : "yes",
     "filename_start"  : "l",
     "filename_end"  : "sum.fits"
     },
