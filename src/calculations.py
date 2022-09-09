@@ -371,7 +371,7 @@ class Calc:
         return D_W, D_F, D_E
 
     def RadCalc(self,accel):
-        acc = accel*1000/60
+        acc = abs(accel*1000/60)
         return np.sqrt((6.674e-11*1.75*1.9884e30)/acc)/(1.8*6.957e8)
 
 class Model:
