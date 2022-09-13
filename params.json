@@ -65,7 +65,19 @@
             "Strength"      : 0.543e-02,
             "Gamma"         : 0.463e+08,
             "Mass"          : 32.06
-        }
+        },
+        "CII_1"        : {
+            "Wavelength"    : 1334.5320,
+            "Strength"      : 0.128,
+            "Gamma"         : 0.288e09,
+            "Mass"          : 12.0106
+        },
+        "CII_2"        : {
+            "Wavelength"    : 1335.7080,
+            "Strength"      : 0.115,
+            "Gamma"         : 0.288e09,
+            "Mass"          : 12.0106
+	}
     }
 },
 
