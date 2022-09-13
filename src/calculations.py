@@ -456,7 +456,8 @@ class Model:
         species --> Given in params.json
         '''
 
-        home = "/home/pas/science/exocomets"
+        path = os.getcwd()
+        home = os.path.dirname(path)
 
         with open(home+'/params.json') as param_file:    
             param = json.load(param_file)
@@ -506,7 +507,8 @@ class Model:
         species --> Given in params.json
         '''
 
-        home = "/home/pas/science/exocomets"
+        path = os.getcwd()
+        home = os.path.dirname(path)
 
         with open(home+'/params.json') as param_file:    
             param = json.load(param_file)
