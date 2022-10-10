@@ -27,7 +27,7 @@
 
 "BetaPictoris" : { 
     "RV": 20.5,
-    "part": "A"
+    "part": "B"
     },
 
 "regions" : {
@@ -66,18 +66,36 @@
             "Gamma"         : 0.463e+08,
             "Mass"          : 32.06
         },
-        "CII_1"        : {
-            "Wavelength"    : 1334.5320,
-            "Strength"      : 0.128,
-            "Gamma"         : 0.288e09,
-            "Mass"          : 12.0106
+        "SiII"        : {
+            "Wavelength"    : 1197.3938,
+            "Strength"      : 0.146e+00,
+            "Gamma"         : 0.409e+10,
+            "Mass"          : 28.085
         },
-        "CII_2"        : {
-            "Wavelength"    : 1335.7080,
-            "Strength"      : 0.115,
-            "Gamma"         : 0.288e09,
-            "Mass"          : 12.0106
-	}
+        "SiIII"        : {
+            "Wavelength"    : 1206.5000,
+            "Strength"      : 0.167e+01,
+            "Gamma"         : 0.255e+10,
+            "Mass"          : 28.085
+        },
+        "NI"        : {
+            "Wavelength"    : 1200.7098,
+            "Strength"      : 0.430e-01,
+            "Gamma"         : 0.398e+09,
+            "Mass"          : 14.0067
+        },
+        "CI"        : {
+            "Wavelength"    : 1194.6146,
+            "Strength"      : 0.230e-02,
+            "Gamma"         : 0.179e+08,
+            "Mass"          : 12.011
+        },
+        "SI"        : {
+            "Wavelength"    : 1218.5953,
+            "Strength"      : 0.100e-08,
+            "Gamma"         : 0.100e+09,
+            "Mass"          : 32.065
+        }
     }
 },
 

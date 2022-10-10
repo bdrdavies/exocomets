@@ -8,6 +8,7 @@ from scipy import signal
 from scipy.special import wofz
 from astropy.io import fits
 from os import sys
+from costools import splittag
 
 class Calc:
     '''
@@ -72,6 +73,18 @@ class Calc:
         d = sorted(d,key=lambda l:l[-1])
 
         return d
+
+    def SplitData(self, param, datadirs):
+        '''Splits the TIME-TAG files into 
+        the number of specified sub-exposures'''
+
+        dir_contents    = os.listdir(datadirs)
+
+        fits_files	= sorted([fn for fn in dir_contents if fn.endswith('sum1.fits')\
+                	  or fn.endswith('sum2.fits') or fn.endswith('sum3.fits') or fn.endswith('sum4.fits')])
+
+        splittag.splittag()
+
 
     def ExtractData(self, fits_file, part, epoch):
         ''' Extracts the header information and
@@ -548,8 +561,8 @@ class Model:
         convolved_abs = np.convolve(feature, LSF_kernel, mode='same')
 
         return convolved_abs
-    
-    def absorptionCII_1(self, l, v_comp, N, vturb, T):
+
+    def absorptionSiII(self, l, v_comp, N, vturb, T):
         '''
         v_comp --> The component speed in km/s
         N --> The column density exponent (10**N)
@@ -564,7 +577,7 @@ class Model:
         with open(home+'/params.json') as param_file:    
             param = json.load(param_file)
 
-        species = "CII_1"
+        species = "SiII"
 
         w       = param["lines"]["line"][species]["Wavelength"]
         mass    = param["lines"]["line"][species]["Mass"]
@@ -599,8 +612,8 @@ class Model:
         convolved_abs = np.convolve(feature, LSF_kernel, mode='same')
 
         return convolved_abs
-        
-    def absorptionCII_2(self, l, v_comp, N, vturb, T):
+
+    def absorptionSiIII(self, l, v_comp, N, vturb, T):
         '''
         v_comp --> The component speed in km/s
         N --> The column density exponent (10**N)
@@ -615,7 +628,7 @@ class Model:
         with open(home+'/params.json') as param_file:    
             param = json.load(param_file)
 
-        species = "CII_2"
+        species = "SiIII"
 
         w       = param["lines"]["line"][species]["Wavelength"]
         mass    = param["lines"]["line"][species]["Mass"]
@@ -650,7 +663,160 @@ class Model:
         convolved_abs = np.convolve(feature, LSF_kernel, mode='same')
 
         return convolved_abs
-    
+
+    def absorptionNI(self, l, v_comp, N, vturb, T):
+        '''
+        v_comp --> The component speed in km/s
+        N --> The column density exponent (10**N)
+        vturb --> Micro turbulence
+        T --> Gas temperature
+        species --> Given in params.json
+        '''
+
+        path = os.getcwd()
+        home = os.path.dirname(path)
+
+        with open(home+'/params.json') as param_file:    
+            param = json.load(param_file)
+
+        species = "NI"
+
+        w       = param["lines"]["line"][species]["Wavelength"]
+        mass    = param["lines"]["line"][species]["Mass"]
+        fosc    = param["lines"]["line"][species]["Strength"]
+        delta   = param["lines"]["line"][species]["Gamma"] /(4.*np.pi)
+        N_col   = np.array([1.])*10**N
+
+        c_light     = 2.99793e14        # Speed of light
+        k           = 1.38064852e-23    # Boltzmann constant in J/K = m^2*kg/(s^2*K) in SI base units
+        u           = 1.660539040e-27   # Atomic mass unit (Dalton) in kg
+        feature  = np.ones(len(l))
+
+        b_wid   = np.sqrt((T/mass) + ((vturb/0.12895223)**2))
+        b       = 4.30136955e-3*b_wid
+        dnud    = b*c_light/w
+        xc      = l/(1.+v_comp*1.e9/c_light) 
+        v       = 1.e4*abs(((c_light/xc)-(c_light/w))/dnud)
+        tv      = 1.16117705e-14*N_col*w*fosc/b_wid
+        a       = delta/dnud
+        hav     = tv*self.voigt_wofz(a,v)
+
+        # To avoid calculating super tiny numbers
+        for j in range(len(hav)):
+
+            if hav[j] < 50:      
+                feature[j]  =   feature[j]*np.exp(-hav[j])       
+            else:
+                feature[j]  =   0.
+
+        LSF_kernel = self.LSF(l, param["lines"]["line"][species]["Wavelength"], home)
+
+        convolved_abs = np.convolve(feature, LSF_kernel, mode='same')
+
+        return convolved_abs
+
+    def absorptionCI(self, l, v_comp, N, vturb, T):
+        '''
+        v_comp --> The component speed in km/s
+        N --> The column density exponent (10**N)
+        vturb --> Micro turbulence
+        T --> Gas temperature
+        species --> Given in params.json
+        '''
+
+        path = os.getcwd()
+        home = os.path.dirname(path)
+
+        with open(home+'/params.json') as param_file:    
+            param = json.load(param_file)
+
+        species = "CI"
+
+        w       = param["lines"]["line"][species]["Wavelength"]
+        mass    = param["lines"]["line"][species]["Mass"]
+        fosc    = param["lines"]["line"][species]["Strength"]
+        delta   = param["lines"]["line"][species]["Gamma"] /(4.*np.pi)
+        N_col   = np.array([1.])*10**N
+
+        c_light     = 2.99793e14        # Speed of light
+        k           = 1.38064852e-23    # Boltzmann constant in J/K = m^2*kg/(s^2*K) in SI base units
+        u           = 1.660539040e-27   # Atomic mass unit (Dalton) in kg
+        feature  = np.ones(len(l))
+
+        b_wid   = np.sqrt((T/mass) + ((vturb/0.12895223)**2))
+        b       = 4.30136955e-3*b_wid
+        dnud    = b*c_light/w
+        xc      = l/(1.+v_comp*1.e9/c_light) 
+        v       = 1.e4*abs(((c_light/xc)-(c_light/w))/dnud)
+        tv      = 1.16117705e-14*N_col*w*fosc/b_wid
+        a       = delta/dnud
+        hav     = tv*self.voigt_wofz(a,v)
+
+        # To avoid calculating super tiny numbers
+        for j in range(len(hav)):
+
+            if hav[j] < 50:      
+                feature[j]  =   feature[j]*np.exp(-hav[j])       
+            else:
+                feature[j]  =   0.
+
+        LSF_kernel = self.LSF(l, param["lines"]["line"][species]["Wavelength"], home)
+
+        convolved_abs = np.convolve(feature, LSF_kernel, mode='same')
+
+        return convolved_abs
+
+    def absorptionSI(self, l, v_comp, N, vturb, T):
+        '''
+        v_comp --> The component speed in km/s
+        N --> The column density exponent (10**N)
+        vturb --> Micro turbulence
+        T --> Gas temperature
+        species --> Given in params.json
+        '''
+
+        path = os.getcwd()
+        home = os.path.dirname(path)
+
+        with open(home+'/params.json') as param_file:    
+            param = json.load(param_file)
+
+        species = "SI"
+
+        w       = param["lines"]["line"][species]["Wavelength"]
+        mass    = param["lines"]["line"][species]["Mass"]
+        fosc    = param["lines"]["line"][species]["Strength"]
+        delta   = param["lines"]["line"][species]["Gamma"] /(4.*np.pi)
+        N_col   = np.array([1.])*10**N
+
+        c_light     = 2.99793e14        # Speed of light
+        k           = 1.38064852e-23    # Boltzmann constant in J/K = m^2*kg/(s^2*K) in SI base units
+        u           = 1.660539040e-27   # Atomic mass unit (Dalton) in kg
+        feature  = np.ones(len(l))
+
+        b_wid   = np.sqrt((T/mass) + ((vturb/0.12895223)**2))
+        b       = 4.30136955e-3*b_wid
+        dnud    = b*c_light/w
+        xc      = l/(1.+v_comp*1.e9/c_light) 
+        v       = 1.e4*abs(((c_light/xc)-(c_light/w))/dnud)
+        tv      = 1.16117705e-14*N_col*w*fosc/b_wid
+        a       = delta/dnud
+        hav     = tv*self.voigt_wofz(a,v)
+
+        # To avoid calculating super tiny numbers
+        for j in range(len(hav)):
+
+            if hav[j] < 50:      
+                feature[j]  =   feature[j]*np.exp(-hav[j])       
+            else:
+                feature[j]  =   0.
+
+        LSF_kernel = self.LSF(l, param["lines"]["line"][species]["Wavelength"], home)
+
+        convolved_abs = np.convolve(feature, LSF_kernel, mode='same')
+
+        return convolved_abs
+
     def LSF(self, W, lsf_cen, home_dir):
         ''' Tabulated Theoretical Line Spread Functions at Lifetime position 3
         See https://www.stsci.edu/hst/instrumentation/cos/performance/spectral-resolution
